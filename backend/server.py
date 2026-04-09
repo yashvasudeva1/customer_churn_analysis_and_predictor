@@ -14,6 +14,19 @@ from scipy import stats
 app = Flask(__name__)
 CORS(app)
 
+@app.route("/", methods=["GET"])
+def index():
+    return jsonify({
+        "status": "online",
+        "service": "Customer Churn Analysis API",
+        "endpoints": [
+            "/api/data/overview",
+            "/api/data/visualizations",
+            "/api/predict",
+            "/api/model/metrics"
+        ]
+    })
+
 # ─── Load model and metrics ───
 BASE_DIR = os.path.dirname(__file__)
 DATA_PATH = os.path.join(BASE_DIR, "..", "WA_Fn-UseC_-Telco-Customer-Churn.csv")
