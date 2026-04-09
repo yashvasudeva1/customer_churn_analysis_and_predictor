@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Users, Layers, UserMinus, Percent, UserCheck } from 'lucide-react'
 
-const API = 'http://localhost:5000/api'
+const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
 export default function Overview() {
   const [data, setData] = useState(null)
