@@ -1,0 +1,231 @@
+{
+  "train": {
+    "accuracy": 81.58,
+    "precision": 63.81,
+    "recall": 70.64,
+    "f1_score": 67.05,
+    "roc_auc": 87.69,
+    "confusion_matrix": [
+      [
+        3540,
+        599
+      ],
+      [
+        439,
+        1056
+      ]
+    ],
+    "classification_report": {
+      "0": {
+        "precision": 0.8896707715506409,
+        "recall": 0.8552790529113312,
+        "f1-score": 0.8721359940872137,
+        "support": 4139.0
+      },
+      "1": {
+        "precision": 0.6380664652567976,
+        "recall": 0.7063545150501672,
+        "f1-score": 0.6704761904761904,
+        "support": 1495.0
+      },
+      "accuracy": 0.8157614483493077,
+      "macro avg": {
+        "precision": 0.7638686184037192,
+        "recall": 0.7808167839807492,
+        "f1-score": 0.7713060922817021,
+        "support": 5634.0
+      },
+      "weighted avg": {
+        "precision": 0.8229067605621254,
+        "recall": 0.8157614483493077,
+        "f1-score": 0.8186249173391698,
+        "support": 5634.0
+      }
+    }
+  },
+  "test": {
+    "accuracy": 77.79,
+    "precision": 57.04,
+    "recall": 66.04,
+    "f1_score": 61.21,
+    "roc_auc": 84.33,
+    "confusion_matrix": [
+      [
+        849,
+        186
+      ],
+      [
+        127,
+        247
+      ]
+    ],
+    "classification_report": {
+      "0": {
+        "precision": 0.8698770491803278,
+        "recall": 0.8202898550724638,
+        "f1-score": 0.8443560417702636,
+        "support": 1035.0
+      },
+      "1": {
+        "precision": 0.5704387990762124,
+        "recall": 0.660427807486631,
+        "f1-score": 0.6121437422552665,
+        "support": 374.0
+      },
+      "accuracy": 0.7778566359119943,
+      "macro avg": {
+        "precision": 0.7201579241282701,
+        "recall": 0.7403588312795474,
+        "f1-score": 0.728249892012765,
+        "support": 1409.0
+      },
+      "weighted avg": {
+        "precision": 0.7903952141633377,
+        "recall": 0.7778566359119943,
+        "f1-score": 0.782718426427035,
+        "support": 1409.0
+      }
+    }
+  },
+  "cross_validation": {
+    "mean_f1": 85.38,
+    "std_f1": 0.86,
+    "fold_scores": [
+      84.32,
+      84.69,
+      85.12,
+      86.6,
+      86.14
+    ]
+  },
+  "feature_importance": [
+    {
+      "feature": "Contract_Two year",
+      "importance": 0.2307
+    },
+    {
+      "feature": "Contract_One year",
+      "importance": 0.1145
+    },
+    {
+      "feature": "PaymentMethod_Electronic check",
+      "importance": 0.0832
+    },
+    {
+      "feature": "InternetService_Fiber optic",
+      "importance": 0.078
+    },
+    {
+      "feature": "OnlineSecurity_No internet service",
+      "importance": 0.0429
+    },
+    {
+      "feature": "OnlineSecurity_Yes",
+      "importance": 0.0403
+    },
+    {
+      "feature": "Dependents_Yes",
+      "importance": 0.0386
+    },
+    {
+      "feature": "PaperlessBilling_Yes",
+      "importance": 0.0378
+    },
+    {
+      "feature": "InternetService_No",
+      "importance": 0.0356
+    },
+    {
+      "feature": "StreamingMovies_Yes",
+      "importance": 0.0301
+    },
+    {
+      "feature": "TechSupport_Yes",
+      "importance": 0.0301
+    },
+    {
+      "feature": "tenure",
+      "importance": 0.0265
+    },
+    {
+      "feature": "MultipleLines_Yes",
+      "importance": 0.0247
+    },
+    {
+      "feature": "StreamingTV_Yes",
+      "importance": 0.0245
+    },
+    {
+      "feature": "OnlineBackup_Yes",
+      "importance": 0.0217
+    },
+    {
+      "feature": "MultipleLines_No phone service",
+      "importance": 0.0214
+    },
+    {
+      "feature": "DeviceProtection_Yes",
+      "importance": 0.0202
+    },
+    {
+      "feature": "gender_Male",
+      "importance": 0.0165
+    },
+    {
+      "feature": "Partner_Yes",
+      "importance": 0.0152
+    },
+    {
+      "feature": "PhoneService_Yes",
+      "importance": 0.0132
+    },
+    {
+      "feature": "PaymentMethod_Credit card (automatic)",
+      "importance": 0.0129
+    },
+    {
+      "feature": "TotalCharges",
+      "importance": 0.0114
+    },
+    {
+      "feature": "PaymentMethod_Mailed check",
+      "importance": 0.01
+    },
+    {
+      "feature": "MonthlyCharges",
+      "importance": 0.0081
+    },
+    {
+      "feature": "DeviceProtection_No internet service",
+      "importance": 0.0077
+    },
+    {
+      "feature": "SeniorCitizen",
+      "importance": 0.0044
+    },
+    {
+      "feature": "OnlineBackup_No internet service",
+      "importance": 0.0
+    },
+    {
+      "feature": "TechSupport_No internet service",
+      "importance": 0.0
+    },
+    {
+      "feature": "StreamingTV_No internet service",
+      "importance": 0.0
+    },
+    {
+      "feature": "StreamingMovies_No internet service",
+      "importance": 0.0
+    }
+  ],
+  "dataset_info": {
+    "total_samples": 7043,
+    "train_samples": 5634,
+    "test_samples": 1409,
+    "num_features": 4,
+    "cat_features": 15,
+    "churn_rate": 26.54
+  }
+}

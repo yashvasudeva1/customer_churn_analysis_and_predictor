@@ -1,0 +1,34 @@
+# ── Python ──────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+*.env
+.venv/
+venv/
+env/
+
+# ── Node / Frontend ──────────────────────────
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/.cache/
+
+# ── OS ───────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Editor ───────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ── Unused archive ───────────────────────────
+not used/
