@@ -1,7 +1,9 @@
 name: Wake Up Render
 on:
   schedule:
-    - cron: '0 * * * *'
+    - cron: '*/15 * * * *' 
+  workflow_dispatch:    
+
 jobs:
   ping:
     runs-on: ubuntu-latest
