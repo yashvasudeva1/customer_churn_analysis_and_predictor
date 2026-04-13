@@ -1,0 +1,10 @@
+name: Wake Up Render
+on:
+  schedule:
+    - cron: '0 * * * *'
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Render App
+        run: curl https://customer-churn-analysis-and-predictor-1.onrender.com
