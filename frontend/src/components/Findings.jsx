@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
 export default function Findings() {
   const [data, setData] = useState(null)
+  const [abTest, setAbTest] = useState(null)
+  const [cohortData, setCohortData] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -11,6 +14,20 @@ export default function Findings() {
       .then(r => r.json())
       .then(d => { setData(d); setLoading(false) })
       .catch(() => setLoading(false))
+  }, [])
+
+  useEffect(() => {
+    fetch(`${API}/ab_test`)
+      .then(r => r.json())
+      .then(d => setAbTest(d))
+      .catch(e => console.error(e))
+  }, [])
+
+  useEffect(() => {
+    fetch(`${API}/cohort`)
+      .then(r => r.json())
+      .then(d => setCohortData(d))
+      .catch(e => console.error(e))
   }, [])
 
   if (loading) return (
@@ -115,6 +132,100 @@ export default function Findings() {
           </div>
         </div>
       </div>
+
+      {abTest && !abTest.error && (
+        <div className="panel" style={{marginTop: '24px'}}>
+          <div className="panel-header">
+            <h2 className="panel-title">A/B Test: Pricing Segment Churn Analysis</h2>
+            <span className="tag">Hypothesis Test</span>
+          </div>
+          <div className="grid-2" style={{marginBottom: '16px'}}>
+            <div style={{border: '1px solid var(--border-muted)', padding: '16px', borderRadius: '8px'}}>
+              <h3 style={{marginBottom: '12px'}}>{abTest.group_a.label}</h3>
+              <div>N: {abTest.group_a.n}</div>
+              <div>Churned: {abTest.group_a.churned}</div>
+              <div style={{fontSize: '2rem', fontWeight: 'bold', color: 'var(--color-stay)', marginTop: '8px'}}>{abTest.group_a.churn_rate}% Churn Rate</div>
+            </div>
+            <div style={{border: '1px solid var(--border-muted)', padding: '16px', borderRadius: '8px'}}>
+              <h3 style={{marginBottom: '12px'}}>{abTest.group_b.label}</h3>
+              <div>N: {abTest.group_b.n}</div>
+              <div>Churned: {abTest.group_b.churned}</div>
+              <div style={{fontSize: '2rem', fontWeight: 'bold', color: 'var(--color-churn)', marginTop: '8px'}}>{abTest.group_b.churn_rate}% Churn Rate</div>
+            </div>
+          </div>
+          <div style={{display: 'flex', gap: '16px', marginBottom: '16px', alignItems: 'center'}}>
+             <div style={{background: 'var(--bg-elevated)', padding: '8px 16px', borderRadius: '4px'}}>
+               <strong>z-statistic:</strong> {abTest.z_stat?.toFixed(2)}
+             </div>
+             <div style={{background: 'var(--bg-elevated)', padding: '8px 16px', borderRadius: '4px'}}>
+               <strong>p-value:</strong> {abTest.p_value < 0.001 ? '< 0.001' : abTest.p_value?.toExponential(2)}
+             </div>
+          </div>
+          <p style={{marginBottom: '24px'}}>{abTest.interpretation}</p>
+          
+          <div style={{display: 'flex', height: '32px', borderRadius: '4px', overflow: 'hidden'}}>
+            <div style={{width: `${abTest.group_a.churn_rate}%`, background: 'var(--color-stay)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '0.8rem', fontWeight: 'bold', whiteSpace: 'nowrap', overflow: 'hidden'}}>
+              Group A {abTest.group_a.churn_rate}%
+            </div>
+            <div style={{width: `${abTest.group_b.churn_rate}%`, background: 'var(--color-churn)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '0.8rem', fontWeight: 'bold', whiteSpace: 'nowrap', overflow: 'hidden'}}>
+              Group B {abTest.group_b.churn_rate}%
+            </div>
+          </div>
+        </div>
+      )}
+
+      {cohortData && !cohortData.error && cohortData.cohorts && (
+        <div className="panel" style={{marginTop: '24px'}}>
+          <div className="panel-header">
+            <h2 className="panel-title">Cohort Retention Analysis</h2>
+            <span className="tag">Time-Series</span>
+          </div>
+          <div style={{height: '280px', marginBottom: '24px', width: '100%'}}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={cohortData.cohorts}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="label" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="churn_rate" name="Churn Rate (%)" fill="var(--color-churn)" />
+                <Bar dataKey="retention_rate" name="Retention Rate (%)" fill="var(--color-stay)" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          
+          <div className="table-wrapper">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Cohort</th>
+                  <th>Total Customers</th>
+                  <th>Churned</th>
+                  <th>Churn Rate</th>
+                  <th>Retention Rate</th>
+                  <th>Avg CLV</th>
+                </tr>
+              </thead>
+              <tbody>
+                {cohortData.cohorts.map(c => (
+                  <tr key={c.label}>
+                    <td className="metric-highlight">{c.label}</td>
+                    <td>{c.total.toLocaleString()}</td>
+                    <td>{c.churned.toLocaleString()}</td>
+                    <td>
+                      <span className={c.churn_rate > 40 ? 'status-bad font-semibold' : c.churn_rate >= 20 ? 'status-warn font-semibold' : 'status-good font-semibold'}>
+                        {c.churn_rate}%
+                      </span>
+                    </td>
+                    <td>{c.retention_rate}%</td>
+                    <td>${c.avg_clv.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

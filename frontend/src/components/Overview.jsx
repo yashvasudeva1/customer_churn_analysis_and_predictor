@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
-import { Users, Layers, UserMinus, Percent, UserCheck } from 'lucide-react'
+import { Users, Layers, UserMinus, Percent, UserCheck, DollarSign } from 'lucide-react'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
 export default function Overview() {
   const [data, setData] = useState(null)
+  const [kpis, setKpis] = useState(null)
+  const [abTest, setAbTest] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -12,6 +14,20 @@ export default function Overview() {
       .then(r => r.json())
       .then(d => { setData(d); setLoading(false) })
       .catch(() => setLoading(false))
+  }, [])
+
+  useEffect(() => {
+    fetch(`${API}/kpis`)
+      .then(r => r.json())
+      .then(d => setKpis(d))
+      .catch(e => console.error(e))
+  }, [])
+
+  useEffect(() => {
+    fetch(`${API}/ab_test`)
+      .then(r => r.json())
+      .then(d => setAbTest(d))
+      .catch(e => console.error(e))
   }, [])
 
   if (loading) return (
@@ -33,7 +49,7 @@ export default function Overview() {
         </p>
       </div>
 
-      <div className="stats-grid">
+      <div className="stats-grid" style={{marginBottom: '24px'}}>
         <div className="stat-item">
           <div className="stat-header">
             <span className="label-caps">Total Customers</span>
@@ -70,6 +86,77 @@ export default function Overview() {
           <div className="stat-value">{data.churn_distribution.no_churn.toLocaleString()}</div>
         </div>
       </div>
+
+      <div className="label-caps" style={{marginBottom:'12px'}}>Business KPIs</div>
+      {kpis && !kpis.error ? (
+        <div className="stats-grid" style={{marginBottom: '24px'}}>
+          <div className="stat-item">
+            <div className="stat-header">
+              <span className="label-caps">Monthly Revenue at Risk</span>
+              <span className="stat-icon-wrapper"><DollarSign size={16} /></span>
+            </div>
+            <div className="stat-value" style={{color: 'var(--color-churn)'}}>${kpis.monthly_revenue_at_risk.toLocaleString()}</div>
+          </div>
+          <div className="stat-item">
+            <div className="stat-header">
+              <span className="label-caps">Annual Revenue at Risk</span>
+              <span className="stat-icon-wrapper"><DollarSign size={16} /></span>
+            </div>
+            <div className="stat-value" style={{color: 'var(--color-churn)'}}>${kpis.annual_revenue_at_risk.toLocaleString()}</div>
+          </div>
+          <div className="stat-item">
+            <div className="stat-header">
+              <span className="label-caps">Avg CLV</span>
+              <span className="stat-icon-wrapper"><DollarSign size={16} /></span>
+            </div>
+            <div className="stat-value" style={{color: 'var(--accent-primary)'}}>${kpis.avg_clv.toLocaleString()}</div>
+          </div>
+          <div className="stat-item">
+            <div className="stat-header">
+              <span className="label-caps">ARPU</span>
+              <span className="stat-icon-wrapper"><DollarSign size={16} /></span>
+            </div>
+            <div className="stat-value">${kpis.arpu_all.toLocaleString()}</div>
+          </div>
+        </div>
+      ) : (
+        <div style={{height:'80px', background:'var(--bg-elevated)', marginBottom:'24px', borderRadius: '8px'}} />
+      )}
+
+      {abTest && !abTest.error && (
+        <div className="panel" style={{marginBottom: '24px'}}>
+          <div className="panel-header">
+            <h2 className="panel-title">A/B Pricing Test</h2>
+            <span className="tag">Statistical</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+            <div style={{flex: 1, padding: '16px', background: 'var(--bg-elevated)', borderRadius: '8px', textAlign: 'center'}}>
+              <div style={{fontWeight: 'bold', marginBottom: '8px'}}>{abTest.group_a.label}</div>
+              <div style={{fontSize: '2rem', fontWeight: 'bold', color: 'var(--color-churn)'}}>{abTest.group_a.churn_rate}%</div>
+              <div style={{fontSize: '0.85rem', color: 'var(--text-muted)'}}>n = {abTest.group_a.n}</div>
+            </div>
+            <div style={{padding: '0 24px', fontSize: '1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+              <div>&rarr;</div>
+              <div style={{fontSize: '1rem', fontWeight: 'bold', color: abTest.diff_pp > 0 ? 'var(--color-churn)' : 'var(--color-stay)'}}>
+                {abTest.diff_pp > 0 ? '+' : ''}{abTest.diff_pp}pp
+              </div>
+            </div>
+            <div style={{flex: 1, padding: '16px', background: 'var(--bg-elevated)', borderRadius: '8px', textAlign: 'center'}}>
+              <div style={{fontWeight: 'bold', marginBottom: '8px'}}>{abTest.group_b.label}</div>
+              <div style={{fontSize: '2rem', fontWeight: 'bold', color: 'var(--color-stay)'}}>{abTest.group_b.churn_rate}%</div>
+              <div style={{fontSize: '0.85rem', color: 'var(--text-muted)'}}>n = {abTest.group_b.n}</div>
+            </div>
+          </div>
+          <p style={{marginBottom: '16px'}}>{abTest.interpretation}</p>
+          <div>
+            {abTest.is_significant ? (
+              <span className="tag status-good">✓ p &lt; 0.001 Significant</span>
+            ) : (
+              <span className="tag status-bad">✗ Not Significant</span>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="panel">
         <div className="panel-header">

@@ -2,13 +2,14 @@ import { useState, useEffect } from 'react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis,
-  PolarRadiusAxis, Radar, Cell
+  PolarRadiusAxis, Radar, Cell, LineChart, Line
 } from 'recharts'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
 export default function ModelMetrics() {
   const [metrics, setMetrics] = useState(null)
+  const [comparison, setComparison] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -16,6 +17,13 @@ export default function ModelMetrics() {
       .then(r => r.json())
       .then(d => { setMetrics(d); setLoading(false) })
       .catch(() => setLoading(false))
+  }, [])
+
+  useEffect(() => {
+    fetch(`${API}/model_comparison`)
+      .then(r => r.json())
+      .then(d => setComparison(d))
+      .catch(e => console.error(e))
   }, [])
 
   if (loading) return (
@@ -50,6 +58,42 @@ export default function ModelMetrics() {
 
   const cross_validation = metrics.cross_validation
 
+  // Prepare multi-model comparison table data
+  let bestRoc = 0;
+  let maxMetrics = { accuracy: 0, precision: 0, recall: 0, f1_score: 0, roc_auc: 0 };
+  let minMetrics = { accuracy: 100, precision: 100, recall: 100, f1_score: 100, roc_auc: 100 };
+  
+  if (comparison && comparison.models) {
+    comparison.models.forEach(m => {
+      if (m.roc_auc > bestRoc) bestRoc = m.roc_auc;
+      ['accuracy', 'precision', 'recall', 'f1_score', 'roc_auc'].forEach(k => {
+        if (m[k] > maxMetrics[k]) maxMetrics[k] = m[k];
+        if (m[k] < minMetrics[k]) minMetrics[k] = m[k];
+      });
+    });
+  }
+
+  // Prepare ROC curve data by merging points
+  let rocData = [];
+  const colors = {
+    'XGBoost': '#ff4b3e',
+    'LightGBM': '#6366f1',
+    'Random Forest': '#10b981',
+    'Logistic Regression': '#eab308'
+  };
+
+  if (comparison && comparison.roc_curves && comparison.roc_curves.length > 0) {
+    // Assuming all models have the same fpr points (from the backend generator)
+    const ptsCount = comparison.roc_curves[0].points.length;
+    for (let i = 0; i < ptsCount; i++) {
+      let pt = { fpr: comparison.roc_curves[0].points[i].fpr, Random: comparison.roc_curves[0].points[i].fpr };
+      comparison.roc_curves.forEach(curve => {
+        pt[curve.model] = curve.points[i] ? curve.points[i].tpr : pt.Random;
+      });
+      rocData.push(pt);
+    }
+  }
+
   return (
     <div className="fade-in">
       <div className="page-header">
@@ -58,6 +102,70 @@ export default function ModelMetrics() {
           XGBoost classifier trained with SMOTE oversampling and regularization for generalization.
         </p>
       </div>
+
+      {comparison && (
+        <>
+          <div className="panel">
+            <div className="panel-header">
+              <h2 className="panel-title">Model Comparison</h2>
+              <span className="panel-subtitle">4 algorithms benchmarked</span>
+            </div>
+            <div className="table-wrapper">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Model</th>
+                    <th>Accuracy</th>
+                    <th>Precision</th>
+                    <th>Recall</th>
+                    <th>F1 Score</th>
+                    <th>ROC-AUC</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {comparison.models.map(m => (
+                    <tr key={m.name}>
+                      <td className="metric-highlight">
+                        {m.name} {m.roc_auc === bestRoc && <span className="tag" style={{marginLeft: '8px', background: 'rgba(16, 185, 129, 0.1)', color: 'var(--color-stay)', borderColor: 'var(--color-stay)'}}>⭐ Best</span>}
+                      </td>
+                      {['accuracy', 'precision', 'recall', 'f1_score', 'roc_auc'].map(k => (
+                        <td key={k} className={
+                          m[k] === maxMetrics[k] ? 'status-good font-semibold' :
+                          m[k] === minMetrics[k] ? 'status-bad' : ''
+                        }>
+                          {m[k].toFixed(1)}%
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="chart-panel" style={{marginBottom: 'var(--spacing-8)'}}>
+            <div className="panel-header">
+              <h2 className="panel-title" style={{fontSize: '1.25rem'}}>ROC Curves — All Models</h2>
+            </div>
+            <ResponsiveContainer width="100%" height={350}>
+              <LineChart data={rocData} margin={{top: 10, right: 30, left: 0, bottom: 20}}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-muted)" />
+                <XAxis dataKey="fpr" type="number" domain={[0, 1]} tick={{ fill: 'var(--text-muted)' }} label={{ value: 'False Positive Rate', position: 'insideBottom', offset: -15, fill: 'var(--text-muted)' }} />
+                <YAxis type="number" domain={[0, 1]} tick={{ fill: 'var(--text-muted)' }} label={{ value: 'True Positive Rate', angle: -90, position: 'insideLeft', fill: 'var(--text-muted)' }} />
+                <Tooltip 
+                  contentStyle={{ background: 'var(--bg-surface-hover)', border: '1px solid var(--border-strong)', borderRadius: '4px' }}
+                  itemStyle={{ color: 'var(--text-main)' }}
+                />
+                <Legend verticalAlign="top" height={36}/>
+                <Line type="monotone" dataKey="Random" stroke="#3f3f46" strokeDasharray="5 5" strokeWidth={2} dot={false} />
+                {comparison.models.map(m => (
+                  <Line key={m.name} type="monotone" dataKey={m.name} stroke={colors[m.name] || '#ccc'} strokeWidth={2} dot={false} />
+                ))}
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </>
+      )}
 
       <div className="stats-grid">
         <div className="stat-item">
